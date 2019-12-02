@@ -84,12 +84,13 @@
 </template>
 
 <script>
+import { reactive, ref } from "@vue/composition-api";
 import { filterStr, valiEmail, valiPass, valiCode } from "@/utils/validate.js";
 export default {
   name: "login",
-  data() {
+  setup(props, context) {
     // 验证邮箱
-    var validateEmail = (rule, value, callback) => {
+    let validateEmail = (rule, value, callback) => {
       if (value === "") {
         callback(new Error("请输入邮箱"));
       } else if (!valiEmail(value)) {
@@ -99,10 +100,10 @@ export default {
       }
     };
     // 验证密码
-    var validatePass = (rule, value, callback) => {
+    let validatePass = (rule, value, callback) => {
       // 过滤特殊字符
-      this.ruleForm.password = filterStr(value);
-      value = this.ruleForm.password;
+      ruleForm.password = filterStr(value);
+      value = ruleForm.password;
 
       if (value === "") {
         callback(new Error("请输入密码"));
@@ -113,24 +114,24 @@ export default {
       }
     };
     // 验证重复密码
-    var validatePass2 = (rule, value, callback) => {
+    let validatePass2 = (rule, value, callback) => {
       // 过滤特殊字符
-      this.ruleForm.password2 = filterStr(value);
-      value = this.ruleForm.password2;
+      ruleForm.password2 = filterStr(value);
+      value = ruleForm.password2;
 
       if (value === "") {
         callback(new Error("请再次输入密码"));
-      } else if (value != this.ruleForm.password) {
+      } else if (value != ruleForm.password) {
         callback(new Error("重复密码不正确"));
       } else {
         callback();
       }
     };
     // 验证验证码
-    var validateCode = (rule, value, callback) => {
+    let validateCode = (rule, value, callback) => {
       // 过滤特殊字符
-      this.ruleForm.code = filterStr(value);
-      value = this.ruleForm.code;
+      ruleForm.code = filterStr(value);
+      value = ruleForm.code;
 
       if (value === "") {
         callback(new Error("请输入验证码"));
@@ -140,39 +141,40 @@ export default {
         callback();
       }
     };
-
-    return {
-      menuTabs: [
-        { id: 0, txt: "登陆", current: true, type: "login" },
-        { id: 1, txt: "注册", current: false, type: "register" }
-      ],
-      currentTab: "login",
-      // 表单数据
-      ruleForm: {
-        email: "",
-        password: "",
-        password2: "",
-        code: ""
-      },
-      rules: {
-        email: [{ validator: validateEmail, trigger: "blur" }],
-        password: [{ validator: validatePass, trigger: "blur" }],
-        password2: [{ validator: validatePass2, trigger: "blur" }],
-        code: [{ validator: validateCode, trigger: "blur" }]
-      }
-    };
-  },
-
-  methods: {
-    toggleMenu(data) {
-      this.menuTabs.forEach(menuTab => {
+    /**
+     * 声明数据
+     */
+    const menuTabs = reactive([
+      { id: 0, txt: "登陆", current: true, type: "login" },
+      { id: 1, txt: "注册", current: false, type: "register" }
+    ]);
+    const currentTab = ref("login");
+    // 表单数据
+    const ruleForm = reactive({
+      email: "",
+      password: "",
+      password2: "",
+      code: ""
+    });
+    // 表单的验证
+    const rules = reactive({
+      email: [{ validator: validateEmail, trigger: "blur" }],
+      password: [{ validator: validatePass, trigger: "blur" }],
+      password2: [{ validator: validatePass2, trigger: "blur" }],
+      code: [{ validator: validateCode, trigger: "blur" }]
+    });
+    /**
+     * 声明函数
+     */
+    const toggleMenu = data => {
+      menuTabs.forEach(menuTab => {
         menuTab.current = false;
       });
       data.current = true;
-      this.currentTab = data.type;
-    },
-    submitForm(formName) {
-      this.$refs[formName].validate(valid => {
+      currentTab.value = data.type;
+    };
+    const submitForm = formName => {
+      context.refs[formName].validate(valid => {
         if (valid) {
           alert("submit!");
         } else {
@@ -180,10 +182,8 @@ export default {
           return false;
         }
       });
-    },
-    resetForm(formName) {
-      this.$refs[formName].resetFields();
-    }
+    };
+    return { menuTabs, currentTab, ruleForm, rules, toggleMenu, submitForm };
   }
 };
 </script>

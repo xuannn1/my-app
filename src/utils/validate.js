@@ -3,8 +3,7 @@
  */
 export function filterStr(str) {
   var pattern = /[`~!@#$^&*()=|{ }':;',\\[\]\\.<>\\/?~！@#￥……&*（）——|{}【】'；：""'。，、？]/g;
-  const res = str.replace(pattern, "");
-  return res;
+  return str.replace(pattern, "");
 }
 
 /**
