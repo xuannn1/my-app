@@ -15,6 +15,14 @@ export function valiEmail(value) {
 }
 
 /**
+ * 验证手机号
+ */
+export function valiPhone(value) {
+  let reg = /^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199)\d{8}$/;
+  return reg.test(value);
+}
+
+/**
  * 验证密码，6至24位数字+字母
  */
 export function valiPass(value) {

@@ -7,30 +7,19 @@
           :key="menuTab.key"
           :class="{ current: menuTab.current }"
           @click="toggleMenu(menuTab)"
-        >
-          {{ menuTab.txt }}
-        </li>
+        >{{ menuTab.txt }}</li>
       </ul>
       <!-- 注册表单 -->
-      <el-form
-        :model="ruleForm"
-        status-icon
-        :rules="rules"
-        ref="ruleForm"
-        class="login-form"
-      >
-        <el-form-item prop="email" class="login-form-item">
-          <label>邮箱</label>
-          <el-input
-            type="email"
-            v-model="ruleForm.email"
-            autocomplete="off"
-          ></el-input>
+      <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" class="login-form">
+        <el-form-item prop="phone" class="login-form-item">
+          <label for="phone">手机号</label>
+          <el-input id="phone" type="tel" v-model="ruleForm.phone" autocomplete="off"></el-input>
         </el-form-item>
 
         <el-form-item prop="password" class="login-form-item">
-          <label>密码</label>
+          <label for="password">密码</label>
           <el-input
+            id="password"
             type="text"
             v-model="ruleForm.password"
             autocomplete="off"
@@ -39,13 +28,10 @@
           ></el-input>
         </el-form-item>
 
-        <el-form-item
-          prop="password2"
-          class="login-form-item"
-          v-if="currentTab === 'register'"
-        >
-          <label>重复密码</label>
+        <el-form-item prop="password2" class="login-form-item" v-if="currentTab === 'register'">
+          <label for="password2">重复密码</label>
           <el-input
+            id="password2"
             type="text"
             v-model="ruleForm.password2"
             autocomplete="off"
@@ -55,17 +41,13 @@
         </el-form-item>
 
         <el-form-item prop="code" class="login-form-item">
-          <label>验证码</label>
+          <label for="code">验证码</label>
           <el-row :gutter="11">
             <el-col :span="14">
-              <el-input
-                v-model.number="ruleForm.code"
-                minlength="6"
-                maxlength="6"
-              ></el-input>
+              <el-input id="code" v-model.number="ruleForm.code" minlength="6" maxlength="6"></el-input>
             </el-col>
             <el-col :span="10">
-              <el-button type="success" class="block">获取验证码</el-button>
+              <el-button type="success" class="block" @click="getCode()">获取验证码</el-button>
             </el-col>
           </el-row>
         </el-form-item>
@@ -75,8 +57,8 @@
             type="danger"
             @click="submitForm('ruleForm')"
             class="login-btn block"
-            >提交</el-button
-          >
+            :disabled="loginBtn"
+          >{{ currentTab === "login" ? "登录" : "注册" }}</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -84,17 +66,18 @@
 </template>
 
 <script>
-import { reactive, ref } from "@vue/composition-api";
-import { filterStr, valiEmail, valiPass, valiCode } from "@/utils/validate.js";
+import { getSms } from "@/api/login.js";
+import { reactive, ref, onMounted } from "@vue/composition-api";
+import { filterStr, valiPhone, valiPass, valiCode } from "@/utils/validate.js";
 export default {
   name: "login",
-  setup(props, context) {
-    // 验证邮箱
-    let validateEmail = (rule, value, callback) => {
+  setup(props, { refs, root }) {
+    // 验证手机号
+    let validatePhone = (rule, value, callback) => {
       if (value === "") {
-        callback(new Error("请输入邮箱"));
-      } else if (!valiEmail(value)) {
-        callback(new Error("请输入有效的邮箱地址"));
+        callback(new Error("请输入手机"));
+      } else if (!valiPhone(value)) {
+        callback(new Error("请输入有效的手机号"));
       } else {
         callback();
       }
@@ -149,16 +132,18 @@ export default {
       { id: 1, txt: "注册", current: false, type: "register" }
     ]);
     const currentTab = ref("login");
+    //登录按钮是否禁用
+    const loginBtn = ref(true);
     // 表单数据
     const ruleForm = reactive({
-      email: "",
+      phone: "",
       password: "",
       password2: "",
       code: ""
     });
     // 表单的验证
     const rules = reactive({
-      email: [{ validator: validateEmail, trigger: "blur" }],
+      phone: [{ validator: validatePhone, trigger: "blur" }],
       password: [{ validator: validatePass, trigger: "blur" }],
       password2: [{ validator: validatePass2, trigger: "blur" }],
       code: [{ validator: validateCode, trigger: "blur" }]
@@ -166,6 +151,7 @@ export default {
     /**
      * 声明函数
      */
+    // 切换tab
     const toggleMenu = data => {
       menuTabs.forEach(menuTab => {
         menuTab.current = false;
@@ -173,8 +159,23 @@ export default {
       data.current = true;
       currentTab.value = data.type;
     };
+    // 获取验证码
+    const getCode = () => {
+      if (!ruleForm.phone) {
+        root.$message.error("手机号不可以为空");
+        return false;
+      }
+      getSms(ruleForm.phone)
+        .then(res => {
+          console.log(res.data.captcha_image_content);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    };
+    // 提交表单
     const submitForm = formName => {
-      context.refs[formName].validate(valid => {
+      refs[formName].validate(valid => {
         if (valid) {
           alert("submit!");
         } else {
@@ -183,7 +184,17 @@ export default {
         }
       });
     };
-    return { menuTabs, currentTab, ruleForm, rules, toggleMenu, submitForm };
+    onMounted(() => {});
+    return {
+      menuTabs,
+      currentTab,
+      loginBtn,
+      ruleForm,
+      rules,
+      toggleMenu,
+      getCode,
+      submitForm
+    };
   }
 };
 </script>
